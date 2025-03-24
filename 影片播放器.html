@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 影片播放器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #222;
+            color: white;
+            transition: background 0.3s, color 0.3s;
+        }
+        .light-mode {
+            background-color: #f0f0f0;
+            color: #222;
+        }
+        #player-container {
+            margin-top: 20px;
+        }
+        iframe {
+            width: 560px;
+            height: 315px;
+            border: none;
+        }
+        input {
+            width: 300px;
+            padding: 8px;
+            margin-top: 20px;
+            border-radius: 5px;
+            border: none;
+        }
+        button {
+            padding: 8px 15px;
+            margin: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #ff0000;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #cc0000;
+        }
+        #recommendations, #history {
+            margin-top: 20px;
+            text-align: left;
+            display: inline-block;
+        }
+        .video-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #333;
+            transition: background 0.3s;
+        }
+        .video-item:hover {
+            background-color: #444;
+        }
+        .video-item img {
+            width: 100px;
+            height: 56px;
+            margin-right: 10px;
+            border-radius: 5px;
+        }
+        #toggle-mode {
+            background-color: #008CBA;
+        }
+        #toggle-mode:hover {
+            background-color: #005f73;
+        }
+    </style>
+</head>
+<body onload="playRandomVideo()">
+
+    <h1>YouTube 影片播放器</h1>
+
+    <!-- 夜間模式切換按鈕 -->
+    <button id="toggle-mode" onclick="toggleMode()">切換夜間模式</button>
+
+    <!-- YouTube 播放區 -->
+    <div id="player-container">
+        <iframe id="youtube-player" allowfullscreen></iframe>
+    </div>
+
+    <!-- 使用者輸入影片網址或ID -->
+    <div>
+        <input type="text" id="video-input" placeholder="輸入 YouTube 影片網址或 ID">
+        <button onclick="loadVideo()">播放影片</button>
+    </div>
+
+    <!-- 推薦影片列表 -->
+    <div id="recommendations">
+        <h2>推薦影片</h2>
+        <div class="video-item" onclick="loadVideoFromList('9bZkp7q19f0')">
+            <img src="https://img.youtube.com/vi/9bZkp7q19f0/0.jpg" alt="影片縮圖">
+            <span>PSY - Gangnam Style</span>
+        </div>
+        <div class="video-item" onclick="loadVideoFromList('3JZ_D3ELwOQ')">
+            <img src="https://img.youtube.com/vi/3JZ_D3ELwOQ/0.jpg" alt="影片縮圖">
+            <span>Ed Sheeran - Shape of You</span>
+        </div>
+        <div class="video-item" onclick="loadVideoFromList('tgbNymZ7vqY')">
+            <img src="https://img.youtube.com/vi/tgbNymZ7vqY/0.jpg" alt="影片縮圖">
+            <span>Keyboard Cat</span>
+        </div>
+    </div>
+
+    <!-- 最近播放影片記錄 -->
+    <div id="history">
+        <h2>播放記錄</h2>
+        <div id="history-list"></div>
+    </div>
+
+    <script>
+        const recommendedVideos = [
+            { id: "9bZkp7q19f0", title: "PSY - Gangnam Style" },
+            { id: "3JZ_D3ELwOQ", title: "Ed Sheeran - Shape of You" },
+            { id: "tgbNymZ7vqY", title: "Keyboard Cat" }
+        ];
+
+        // 隨機播放推薦影片
+        function playRandomVideo() {
+            let randomIndex = Math.floor(Math.random() * recommendedVideos.length);
+            loadVideoFromList(recommendedVideos[randomIndex].id);
+        }
+
+        // 讀取使用者輸入的影片網址或 ID
+        function loadVideo() {
+            let input = document.getElementById('video-input').value.trim();
+            let videoId = extractVideoID(input);
+            if (videoId) {
+                updatePlayer(videoId);
+                saveToHistory(videoId);
+            } else {
+                alert("請輸入有效的 YouTube 影片網址或 ID！");
+            }
+        }
+
+        // 點擊推薦影片載入影片
+        function loadVideoFromList(videoId) {
+            updatePlayer(videoId);
+            saveToHistory(videoId);
+        }
+
+        // 更新播放器
+        function updatePlayer(videoId) {
+            document.getElementById('youtube-player').src = "https://www.youtube.com/embed/" + videoId;
+        }
+
+        // 解析 YouTube 影片 ID
+        function extractVideoID(input) {
+            if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+                return input;
+            }
+            let match = input.match(/[?&]v=([^&]+)/) || input.match(/youtu\.be\/([^?]+)/);
+            return match ? match[1] : null;
+        }
+
+        // 儲存播放記錄
+        function saveToHistory(videoId) {
+            let historyList = document.getElementById("history-list");
+            let videoThumbnail = `https://img.youtube.com/vi/${videoId}/0.jpg`;
+
+            let videoElement = document.createElement("div");
+            videoElement.classList.add("video-item");
+            videoElement.innerHTML = `
+                <img src="${videoThumbnail}" alt="影片縮圖">
+                <span>影片 ID: ${videoId}</span>
+            `;
+            videoElement.onclick = function () {
+                updatePlayer(videoId);
+            };
+
+            historyList.prepend(videoElement);
+        }
+
+        // 切換夜間模式
+        function toggleMode() {
+            document.body.classList.toggle("light-mode");
+        }
+    </script>
+
+</body>
+</html>
